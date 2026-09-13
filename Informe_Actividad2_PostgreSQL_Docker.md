@@ -51,7 +51,7 @@ Se aborda de forma integral:
 
 El despliegue del motor de base de datos se realizó sobre un entorno **Linux Debian 12 (Bookworm)**. Para la gestión de paquetes del sistema host, se utilizaron los repositorios oficiales de Debian y el repositorio oficial de Docker (`https://download.docker.com/linux/debian bookworm InRelease`).
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 sudo apt update && sudo apt -y upgrade
@@ -68,7 +68,7 @@ sudo apt update && sudo apt -y upgrade
 
 En lugar de una instalación nativa sobre el sistema host, se procedió a **aislar el entorno utilizando contenedores Docker** con la imagen oficial de PostgreSQL 13. Esta estrategia aporta portabilidad, reproducibilidad y evita contaminar el host con dependencias de PostgreSQL.
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 mkdir -p ~/Actividad2 && cd ~/Actividad2
@@ -85,7 +85,7 @@ docker pull postgres:13
 
 Posteriormente, se instanció el contenedor asignando variables de entorno iniciales y mapeando el puerto interno `5432` al puerto externo `5433` del host para evitar conflictos de red:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker run -d \
@@ -112,7 +112,7 @@ docker run -d \
 
 Se verificó la ejecución activa del contenedor y la versión del motor.
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker ps
@@ -124,7 +124,7 @@ docker ps
 ![Verificación docker ps](img/P1,1~1,4.png)
 *Figura 2 - Salida de `docker ps` mostrando el contenedor `postgres13` activo y la reorientación de puertos `0.0.0.0:5433->5432/tcp` (Captura 1).*
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker exec postgres13 psql -U marco -d db_desarrollo -c "SELECT version();"
@@ -138,7 +138,7 @@ docker exec postgres13 psql -U marco -d db_desarrollo -c "SELECT version();"
 
 Para asegurar el estado de escucha en el sistema host en el puerto configurado:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker logs postgres13 --tail 20
@@ -163,7 +163,7 @@ ss -tulpn | grep 5433
 
 Se accedió a la consola interactiva `psql` para definir los roles del escenario corporativo:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker exec -it postgres13 psql -U marco -d db_desarrollo
@@ -173,7 +173,7 @@ docker exec -it postgres13 psql -U marco -d db_desarrollo
 > * `-it`: Combina `-i` (interactivo, mantiene STDIN abierto) y `-t` (asigna pseudo-TTY) para obtener un prompt `psql` interactivo con historial y autocompletado, no solo una consulta puntual `-c`.
 > * `psql -U marco -d db_desarrollo`: Conexión como superusuario `marco` a la base inicial. Desde aquí se crean los roles operativos.
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```sql
 CREATE ROLE udesarrollo WITH LOGIN CREATEDB PASSWORD '123123';
@@ -184,7 +184,7 @@ CREATE ROLE encargadodb WITH LOGIN SUPERUSER PASSWORD '123123';
 > * `CREATE ROLE udesarrollo WITH LOGIN CREATEDB PASSWORD '123123'`: Crea el rol para el equipo de desarrollo. `LOGIN` le permite autenticarse (equivale a `CREATE USER`), `CREATEDB` le autoriza a crear bases de datos (útil para entornos de pruebas), pero **no** es `SUPERUSER` ni `CREATEROLE`, aplicando el principio de mínimo privilegio. La contraseña se almacena hasheada con `md5`/`scram-sha-256` según `password_encryption`.
 > * `CREATE ROLE encargadodb WITH LOGIN SUPERUSER PASSWORD '123123'`: Rol de administración/operaciones con `SUPERUSER`, máximo privilegio (puede bypasear `pg_hba`, crear extensiones, leer cualquier tabla). Simula al DBA corporativo responsable de `db_produccion`.
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```sql
 \du
@@ -202,7 +202,7 @@ CREATE ROLE encargadodb WITH LOGIN SUPERUSER PASSWORD '123123';
 
 Se configuró al usuario `udesarrollo` como propietario de la base de datos de desarrollo y se creó la estructura requerida.
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```sql
 ALTER DATABASE db_desarrollo OWNER TO udesarrollo;
@@ -216,7 +216,7 @@ ALTER DATABASE db_desarrollo OWNER TO udesarrollo;
 ![Propiedad de base de datos](img/P2,4.png)
 *Figura 6 - Salida de `\l` indicando que `db_desarrollo` pertenece a `udesarrollo` (Captura 4).*
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```sql
 CREATE TABLE tbl_desarrollo (
@@ -238,7 +238,7 @@ ALTER TABLE tbl_desarrollo OWNER TO udesarrollo;
 
 Se popularon 100,000 registros aleatorios usando funciones integradas:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```sql
 INSERT INTO tbl_desarrollo (nombre, creacion)
@@ -265,7 +265,7 @@ SELECT COUNT(*) FROM tbl_desarrollo;
 
 Se creó la base de datos operativa, asignando a `encargadodb` como propietario y poblando la tabla correspondiente.
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```sql
 CREATE DATABASE db_produccion OWNER encargadodb;
@@ -305,7 +305,7 @@ SELECT COUNT(*) FROM tbl_produccion;
 
 Se respaldó la configuración por defecto y se aplicó la política de seguridad requerida:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker exec postgres13 cp /var/lib/postgresql/data/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf.bak
@@ -320,7 +320,7 @@ nano /var/lib/postgresql/data/pg_hba.conf
 
 Se insertaron las siguientes directivas **antes de las reglas generales** de autenticación:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```plaintext
 host    db_desarrollo   udesarrollo     192.168.56.124/32        md5
@@ -337,7 +337,7 @@ host    all             encargadodb     0.0.0.0/0               reject
 > 4. `host all encargadodb 0.0.0.0/0 reject`: Bloqueo total para `encargadodb` desde cualquier otra IP.
 > * Efecto combinado: Segregación por IP-origen y por base de datos. Ni siquiera un `SELECT` de `udesarrollo` hacia `db_produccion` será permitido, aunque conozca la contraseña, si no viene de la IP autorizada.*
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 exit
@@ -356,7 +356,7 @@ docker exec postgres13 tail -n 15 /var/lib/postgresql/data/pg_hba.conf
 
 Se aplicaron los cambios y se activó la auditoría de conexiones entrantes:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker exec -it postgres13 psql -U marco -d db_desarrollo -c "SELECT pg_reload_conf();"
@@ -376,7 +376,7 @@ docker exec -it postgres13 psql -U marco -d db_desarrollo -c "ALTER SYSTEM SET l
 
 En la máquina cliente se configuró la IP `192.168.56.124/24` en la interfaz de red:
 
-##### Código ejecutado (sin modificar):
+##### Código ejecutado:
 
 ```bash
 sudo nmcli device disconnect eth1 && sudo ip addr flush dev eth1 && sudo ip addr add 192.168.56.124/24 dev eth1 && sudo ip link set dev eth1 up
@@ -392,7 +392,7 @@ psql -h 192.168.56.55 -p 5433 -U udesarrollo -d db_desarrollo
 
 Dentro de psql:
 
-##### Código ejecutado (sin modificar):
+##### Código ejecutado:
 
 ```sql
 SELECT inet_client_addr();
@@ -408,7 +408,7 @@ SELECT inet_client_addr();
 
 #### Prueba B: Intento No Autorizado de udesarrollo a Producción
 
-##### Código ejecutado (sin modificar):
+##### Código ejecutado:
 
 ```bash
 psql -h 192.168.56.55 -p 5433 -U udesarrollo -d db_produccion
@@ -424,7 +424,7 @@ psql -h 192.168.56.55 -p 5433 -U udesarrollo -d db_produccion
 
 Se cambió la IP del cliente a `192.168.56.200/24`:
 
-##### Código ejecutado (sin modificar):
+##### Código ejecutado:
 
 ```bash
 sudo nmcli device disconnect eth1 && sudo ip addr flush dev eth1 && sudo ip addr add 192.168.56.200/24 dev eth1 && sudo ip link set dev eth1 up
@@ -436,7 +436,7 @@ psql -h 192.168.56.55 -p 5433 -U encargadodb -d db_produccion
 
 Dentro de psql:
 
-##### Código ejecutado (sin modificar):
+##### Código ejecutado:
 
 ```sql
 SELECT inet_client_addr();
@@ -454,7 +454,7 @@ SELECT inet_client_addr();
 
 Desde la máquina servidor se extrajeron los archivos para la entrega:
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 docker cp postgres13:/var/lib/postgresql/data/pg_hba.conf ~/Actividad2/pg_hba.conf
@@ -470,7 +470,7 @@ ls -lh ~/Actividad2/postgresql.log
 ![Extracción de logs](img/P3,11,1.png)
 *Figura 14 - Salida de `ls -lh` listando `postgresql.log` y `pg_hba.conf` extraídos (Captura 12 - P3,11,1).*
 
-#### Código ejecutado (sin modificar):
+#### Código ejecutado:
 
 ```bash
 cd ~/Actividad2
