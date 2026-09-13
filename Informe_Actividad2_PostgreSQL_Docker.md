@@ -34,7 +34,7 @@
 
 ## Resumen
 
-El presente informe documenta la implementación, administración y aseguramiento de un entorno de bases de datos **PostgreSQL versión 13** desplegado sobre **contenedores Docker** en un sistema operativo **Minunux(Minios)**.
+El presente informe documenta la implementación, administración y aseguramiento de un entorno de bases de datos **PostgreSQL versión 13** desplegado sobre **contenedores Docker** en un sistema operativo **Linux Debian 12 (Bookworm)**.
 
 Se aborda de forma integral:
 
@@ -75,7 +75,8 @@ mkdir -p ~/Actividad2 && cd ~/Actividad2
 docker pull postgres:13
 ```
 
-![Captura:](/img/P1,1~1,4.png)
+![Repositorios y actualización del sistema](img/P1,1~1,4.png)
+*Figura 1 - Identificación de repositorios Debian + Docker y actualización del sistema host (Puntos 1.1 al 1.4).*
 
 > 🔍 **¿Qué hace este código? - Explicación ampliada:**
 > * `mkdir -p ~/Actividad2`: Crea el directorio de trabajo `Actividad2` en el home del usuario. El flag `-p` evita error si ya existe y crea padres intermedios si fuese necesario.
