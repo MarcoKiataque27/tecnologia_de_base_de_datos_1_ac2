@@ -72,12 +72,10 @@ En lugar de una instalación nativa sobre el sistema host, se procedió a **aisl
 
 ```bash
 mkdir -p ~/Actividad2 && cd ~/Actividad2
+```
+```bash
 docker pull postgres:13
 ```
-
-![Repositorios y actualización del sistema](img/P1,1~1,4.png)
-*Figura 1 - Identificación de repositorios Debian + Docker y actualización del sistema host (Puntos 1.1 al 1.4).*
-
 > 🔍 **¿Qué hace este código? - Explicación ampliada:**
 > * `mkdir -p ~/Actividad2`: Crea el directorio de trabajo `Actividad2` en el home del usuario. El flag `-p` evita error si ya existe y crea padres intermedios si fuese necesario.
 > * `cd ~/Actividad2`: Cambia el contexto de trabajo a dicho directorio para que todos los artefactos posteriores (logs, `pg_hba.conf`, `.zip`) queden centralizados.
@@ -121,8 +119,7 @@ docker ps
 > 🔍 **¿Qué hace este código? - Explicación ampliada:**
 > Lista los contenedores en estado `Up`. Permite confirmar que `postgres13` está en `STATUS Up ...`, que el mapeo es `0.0.0.0:5433->5432/tcp` y que no ha entrado en bucle de reinicio (`Restarting`). Es el primer diagnóstico post-`docker run`.
 
-![Verificación docker ps](img/P1,1~1,4.png)
-*Figura 2 - Salida de `docker ps` mostrando el contenedor `postgres13` activo y la reorientación de puertos `0.0.0.0:5433->5432/tcp` (Captura 1).*
+![Verificación docker ps](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P1,1~1,4.png?raw=true)
 
 #### Código ejecutado:
 
@@ -134,7 +131,7 @@ docker exec postgres13 psql -U marco -d db_desarrollo -c "SELECT version();"
 > * `docker exec postgres13`: Ejecuta un comando dentro del namespace del contenedor ya corriendo, sin necesidad de SSH.
 > * `psql -U marco -d db_desarrollo -c "SELECT version();"`: Invoca el cliente oficial `psql` como usuario `marco`, conectado a `db_desarrollo`, y ejecuta una sola sentencia SQL `-c`. `SELECT version();` retorna la cadena de compilación, ej. `PostgreSQL 13.23 (Debian 13.23-1.pgdg13+1) on x86_64-pc-linux-gnu`. Es la prueba fehaciente de que el motor corresponde a la versión 13 solicitada.
 
-*La confirmación de la versión `PostgreSQL 13.23 (Debian 13.23-1.pgdg13+1)` se evidencia en la Figura 1 (Captura 2).*
+![Verificación docker ps](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P1,5.png?raw=true)
 
 Para asegurar el estado de escucha en el sistema host en el puerto configurado:
 
@@ -149,11 +146,7 @@ ss -tulpn | grep 5433
 > * `docker logs postgres13 --tail 20`: Muestra las últimas 20 líneas de `stdout/stderr` del proceso `postgres` dentro del contenedor. Se espera ver `database system is ready to accept connections` y `listening on IPv4 address "0.0.0.0", port 5432`. Cualquier `FATAL` o `role does not exist` aparecería aquí.
 > * `ss -tulpn | grep 5433`: `ss` (Socket Statistics) reemplaza a `netstat`. Flags: `-t` TCP, `-u` UDP, `-l` solo sockets en escucha, `-p` muestra proceso propietario, `-n` no resuelve nombres. El `grep 5433` filtra solo la línea del mapeo Docker `*:5433` con proceso `docker-proxy`. Confirma que el host realmente está escuchando y que no hay firewall bloqueando el puerto.
 
-![Logs y verificación de puerto](img/P1,5.png)
-*Figura 3 - Salida de `docker logs postgres13 --tail 20` con estado Ready to accept connections (Captura asociada a P1.5).*
-
-![Estado de escucha en el host](img/P1,6.png)
-*Figura 4 - Salida de `ss -tulpn | grep 5433` confirmando escucha en `0.0.0.0:5433` (Captura asociada a P1.6).*
+![Estado de escucha en el host](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P1,6.png?raw=true)
 
 ---
 
@@ -193,8 +186,7 @@ CREATE ROLE encargadodb WITH LOGIN SUPERUSER PASSWORD '123123';
 > 🔍 **¿Qué hace este código? - Explicación ampliada:**
 > Meta-comando de `psql` (no es SQL estándar) que lista roles desde `pg_roles`. Columnas clave: `List of roles`, `Attributes` (`Superuser`, `Create DB`, `Cannot login`) y `Member of`. Permite verificar visualmente que `udesarrollo` tiene `Create DB` y `encargadodb` figura como `Superuser`.
 
-![Listado de roles](img/P2,1~2,3.png)
-*Figura 5 - Resultado de `\du` listando los roles `udesarrollo` con atributo Create DB y `encargadodb` como Superuser (Captura 3 - P2,1~2,3).*
+![Listado de roles](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P2,1~2,3.png?raw=true)
 
 ---
 
@@ -213,8 +205,7 @@ ALTER DATABASE db_desarrollo OWNER TO udesarrollo;
 > * `ALTER DATABASE db_desarrollo OWNER TO udesarrollo`: Transfiere la propiedad de la base. El *owner* puede hacer `DROP DATABASE`, crear esquemas, otorgar privilegios y se convierte en dueño implícito de los objetos futuros si no se especifica lo contrario.
 > * `\l` (`\list`): Lista todas las bases de datos del clúster con columnas `Name | Owner | Encoding | Collate | Ctype | Access privileges`. Sirve para auditar que `db_desarrollo` ahora pertenece a `udesarrollo` y no a `marco`.
 
-![Propiedad de base de datos](img/P2,4.png)
-*Figura 6 - Salida de `\l` indicando que `db_desarrollo` pertenece a `udesarrollo` (Captura 4).*
+![Propiedad de base de datos](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P2,4.png?raw=true)
 
 #### Código ejecutado:
 
@@ -225,6 +216,7 @@ CREATE TABLE tbl_desarrollo (
     creacion DATE
 );
 ALTER TABLE tbl_desarrollo OWNER TO udesarrollo;
+\dt
 \d tbl_desarrollo
 ```
 
@@ -233,8 +225,7 @@ ALTER TABLE tbl_desarrollo OWNER TO udesarrollo;
 > * `ALTER TABLE ... OWNER TO udesarrollo`: Asigna propiedad explícita de la tabla. Aunque la DB ya es de `udesarrollo`, PostgreSQL distingue owner por objeto; esto asegura que `\d` muestre `Owner: udesarrollo`.
 > * `\d tbl_desarrollo`: Describe la tabla: columnas, tipos, modificadores, índices, restricciones y owner. Es el `DESCRIBE` de PostgreSQL.
 
-![Estructura tbl_desarrollo](img/P2,5.png)
-*Figura 7 - Estructura de `tbl_desarrollo` obtenida con `\d` (Captura 5).*
+![Estructura tbl_desarrollo](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P2,5.png?raw=true)
 
 Se popularon 100,000 registros aleatorios usando funciones integradas:
 
@@ -245,7 +236,9 @@ INSERT INTO tbl_desarrollo (nombre, creacion)
 SELECT md5(random()::text), CURRENT_DATE
 FROM generate_series(1,100000);
 
+
 SELECT COUNT(*) FROM tbl_desarrollo;
+SELECT * FROM tbl_desarrollo LIMIT 10;
 ```
 
 > 🔍 **¿Qué hace este código? - Explicación ampliada:**
@@ -256,9 +249,7 @@ SELECT COUNT(*) FROM tbl_desarrollo;
 > * `INSERT INTO ... SELECT ...`: Inserción masiva en una sola sentencia, mucho más eficiente que 100k `INSERT` individuales (una sola transacción, un solo WAL flush).
 > * `SELECT COUNT(*) FROM tbl_desarrollo;`: Verificación de cardinalidad. Debe retornar exactamente `100000`. Valida que no hubo `ROLLBACK` parcial ni violación de `PRIMARY KEY`.
 
-![Conteo desarrollo](img/P2,6.png)
-*Figura 8 - Conteo exacto de 100,000 registros en `tbl_desarrollo` (Captura 6).*
-
+![Conteo desarrollo](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P2,6.png?raw=true)
 ---
 
 ### 2.3 Entorno de Producción (db_produccion)
@@ -270,19 +261,31 @@ Se creó la base de datos operativa, asignando a `encargadodb` como propietario 
 ```sql
 CREATE DATABASE db_produccion OWNER encargadodb;
 \c db_produccion marco
+```
 
+#### Código ejecutado:
+
+```sql
 CREATE TABLE tbl_produccion (
     id SERIAL PRIMARY KEY,
     nombre TEXT,
     creacion DATE
 );
 ALTER TABLE tbl_produccion OWNER TO encargadodb;
+\dt
+\d tbl_produccion
+```
 
+#### Código ejecutado:
+
+```sql
 INSERT INTO tbl_produccion (nombre, creacion)
 SELECT md5(random()::text), CURRENT_DATE
 FROM generate_series(1,100000);
 
+
 SELECT COUNT(*) FROM tbl_produccion;
+SELECT * FROM tbl_produccion LIMIT 10;
 \q
 ```
 
@@ -294,8 +297,7 @@ SELECT COUNT(*) FROM tbl_produccion;
 > * `SELECT COUNT(*)`: Segunda verificación de volumen. También debe devolver `100000`.
 > * `\q`: Quit - cierra la sesión `psql` y vuelve al shell del contenedor/host.
 
-![Conteo producción](img/P2,7~2,9.png)
-*Figura 9 - Conteo de 100,000 registros en `tbl_produccion` dentro de `db_produccion` (Captura 7 - P2,7~2,9).*
+![Conteo producción](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P2,7~2,9.png?raw=true)
 
 ---
 
@@ -309,9 +311,16 @@ Se respaldó la configuración por defecto y se aplicó la política de segurida
 
 ```bash
 docker exec postgres13 cp /var/lib/postgresql/data/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf.bak
+```
+
+#### Código ejecutado:
+
+```bash
 docker exec -it postgres13 bash
+apt update && apt install -y nano
 nano /var/lib/postgresql/data/pg_hba.conf
 ```
+
 
 > 🔍 **¿Qué hace este código? - Explicación ampliada:**
 > * `docker exec postgres13 cp ... pg_hba.conf.bak`: Copia de seguridad del archivo Host-Based Authentication antes de editar. `pg_hba.conf` controla **quién, desde dónde y cómo** puede conectarse. Un error de sintaxis puede dejar el clúster inaccesible, por lo que el `.bak` permite `cp ...bak ...conf && pg_reload_conf()` para revertir.
@@ -340,7 +349,6 @@ host    all             encargadodb     0.0.0.0/0               reject
 #### Código ejecutado:
 
 ```bash
-exit
 docker exec postgres13 tail -n 15 /var/lib/postgresql/data/pg_hba.conf
 ```
 
@@ -348,11 +356,7 @@ docker exec postgres13 tail -n 15 /var/lib/postgresql/data/pg_hba.conf
 > * `exit`: Sale del shell `bash` dentro del contenedor y vuelve al host.
 > * `tail -n 15 .../pg_hba.conf`: Muestra las últimas 15 líneas del archivo ya modificado. Es la verificación post-edición para confirmar que las 4 reglas `host ... reject/md5` quedaron al final (o en la zona `host` antes de `local`) y que no hay duplicados ni errores de espaciado (PostgreSQL exige columnas separadas por espacios/tabs).
 
-![Respaldo y edición pg_hba](img/P3,1~3,3.png)
-*Figura 10 - Respaldo `pg_hba.conf.bak` y edición con `nano` de las directivas `host` (P3,1~3,3).*
-
-![Verificación pg_hba](img/P3,4~3,5.png)
-*Figura 11 - Salida de `tail -n 15` mostrando las reglas `host` y `reject` añadidas a `pg_hba.conf` (Captura 8 - P3,4~3,5).*
+![Respaldo y edición pg_hba](https://github.com/MarcoKiataque27/tecnologia_de_base_de_datos_1_ac2/blob/main/img/P3,1~3,3.png?raw=true)
 
 Se aplicaron los cambios y se activó la auditoría de conexiones entrantes:
 
@@ -360,13 +364,30 @@ Se aplicaron los cambios y se activó la auditoría de conexiones entrantes:
 
 ```bash
 docker exec -it postgres13 psql -U marco -d db_desarrollo -c "SELECT pg_reload_conf();"
-docker exec -it postgres13 psql -U marco -d db_desarrollo -c "ALTER SYSTEM SET log_connections = on; SELECT pg_reload_conf();"
+```
+
+#### Código ejecutado:
+
+```bash
+docker exec -it postgres13 psql -U marco -d db_desarrollo
+```
+
+Dentro del prompt SQL:
+
+```sql
+ALTER SYSTEM SET log_connections = on;
+SELECT pg_reload_conf();
+\q
 ```
 
 > 🔍 **¿Qué hace este código? - Explicación ampliada:**
 > * `SELECT pg_reload_conf();`: Recarga archivos de configuración (`postgresql.conf`, `pg_hba.conf`) sin reiniciar el contenedor. Retorna `t` si tuvo éxito. Es equivalente a `SELECT pg_reload_conf()` + `SIGHUP` al postmaster. Evita downtime.
 > * `ALTER SYSTEM SET log_connections = on;`: Escribe `log_connections = 'on'` en `postgresql.auto.conf` (sobrescribe `postgresql.conf`). Con `on`, cada intento de conexión (éxito o `FATAL`) se registra en `postgresql.log` con IP, usuario y base. Clave para auditoría forense.
 > * Segundo `SELECT pg_reload_conf();`: Aplica inmediatamente el cambio de `log_connections` sin reiniciar.
+
+
+![Verificación pg_hba](img/P3,4~3,5.png)
+*Figura 11 - Salida de `tail -n 15` mostrando las reglas `host` y `reject` añadidas a `pg_hba.conf` (Captura 8 - P3,4~3,5).*
 
 ---
 
@@ -458,7 +479,23 @@ Desde la máquina servidor se extrajeron los archivos para la entrega:
 
 ```bash
 docker cp postgres13:/var/lib/postgresql/data/pg_hba.conf ~/Actividad2/pg_hba.conf
+```
+
+#### Código ejecutado:
+
+```bash
+ls -l ~/Actividad2/pg_hba.conf
+```
+
+#### Código ejecutado:
+
+```bash
 docker logs postgres13 > ~/Actividad2/postgresql.log
+```
+
+#### Código ejecutado:
+
+```bash
 ls -lh ~/Actividad2/postgresql.log
 ```
 
@@ -475,6 +512,11 @@ ls -lh ~/Actividad2/postgresql.log
 ```bash
 cd ~/Actividad2
 zip -r Actividad2_Marco_Kiataque.zip pg_hba.conf postgresql.log
+```
+
+#### Código ejecutado:
+
+```bash
 ls -lh ~/Actividad2/Actividad2_Marco_Kiataque.zip
 ```
 
